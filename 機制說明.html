@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>錢荒機制說明</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0f1114;--ink2:#3b424b;--mute:#5c6570;--rule:#e4e7eb;--swiss:#e30613;--red:#e30613;--amber:#d69600;--green:#00875a;
+  --num:"Archivo","Helvetica Neue",Arial,sans-serif;--cjk:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:#ffffff;color:var(--ink);font:400 18px/1.75 var(--cjk);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1100px;margin:0 auto;padding:0 40px 80px}
+@media(max-width:820px){.wrap{padding:0 18px 60px}}
+.bar{border-bottom:1px solid var(--ink)}
+.bar .in{max-width:1100px;margin:0 auto;padding:16px 40px;display:flex;gap:24px;align-items:baseline}
+@media(max-width:820px){.bar .in{padding:14px 18px}}
+.bar b{font-size:20px;font-weight:900}
+.bar a{margin-left:auto;font-size:17px;font-weight:700;color:inherit;text-decoration:none;border-bottom:2px solid var(--swiss)}
+h1{font-size:clamp(44px,7vw,80px);font-weight:900;line-height:1.1;margin:48px 0 12px;letter-spacing:-.01em}
+.lead{font-size:22px;color:var(--ink2);max-width:36em;margin:0}
+section{margin-top:72px;border-top:1px solid var(--ink);padding-top:18px}
+.sh{display:flex;gap:18px;align-items:baseline}
+.sh span{font:800 56px/1 var(--num);color:var(--swiss)}
+h2{font-size:32px;font-weight:900;margin:0}
+p,li{color:var(--ink2)}
+b{color:var(--ink)}
+.chain{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 32px;margin-top:20px}
+@media(max-width:820px){.chain{grid-template-columns:minmax(0,1fr)}}
+.chain div{border-top:1px solid var(--ink);padding:14px 0 22px}
+.chain h3{margin:0;font-size:21px;font-weight:900}
+.chain h3 i{font:700 18px var(--num);font-style:normal;color:var(--swiss);margin-right:8px}
+.chain p{margin:6px 0 0}
+.tbl{overflow-x:auto;margin-top:20px}
+table{border-collapse:collapse;width:100%;min-width:760px;font-size:17px}
+th,td{text-align:left;padding:12px 16px 12px 0;border-bottom:1px solid var(--rule);vertical-align:top}
+th{border-bottom:1px solid var(--ink);color:var(--ink2);font-size:16px}
+td.n{font-family:var(--num);font-weight:700;white-space:nowrap}
+td i{display:inline-block;width:12px;height:12px;margin-right:8px}
+i.red{background:var(--red)}i.yellow{background:var(--amber)}i.green{background:var(--green)}i.gray{background:var(--rule)}
+.hist{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0 24px;margin-top:20px}
+@media(max-width:820px){.hist{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.hist div{border-top:1px solid var(--ink);padding-top:12px}
+.hist b{display:block;font:800 40px/1.1 var(--num)}
+.hist span{font-size:17px;color:var(--mute)}
+ul{padding-left:1.2em}
+</style>
+</head>
+<body>
+<div class="bar"><div class="in"><b>錢荒機制說明</b><a href="index.html">← 回儀表板</a></div></div>
+<div class="wrap">
+  <h1>黃金下跌的原因<br>可能是回購市場缺錢</h1>
+  <p class="lead">儀表板追蹤的邏輯：美元資金緊張時，機構會先賣出流動性最好的資產換現金；資金補上後，市場才有條件修復。</p>
+
+  <section>
+    <div class="sh"><span>01</span><h2>機制</h2></div>
+    <div class="chain">
+      <div><h3><i>1</i>利多卻下跌</h3><p>利率與美元條件對黃金有利，金價卻大跌，代表有其他力量在賣。</p></div>
+      <div><h3><i>2</i>回購市場缺美元</h3><p>短期資金利率走高，市場寧可付高價借錢，也不願使用聯準會的緊急窗口。</p></div>
+      <div><h3><i>3</i>先賣黃金</h3><p>黃金市場深、浮盈多、當天就能換成現金，往往是最先被賣出的資產。</p></div>
+      <div><h3><i>4</i>緩衝耗盡</h3><p>銀行體系的閒置資金與逆回購餘額偏低，吸收衝擊的能力下降。</p></div>
+      <div><h3><i>5</i>補水</h3><p>財政部釋出帳戶資金、聯準會增購短債，把現金送回市場。</p></div>
+      <div><h3><i>6</i>修復</h3><p>資金壓力消退後，被錯殺的資產才有條件收復。</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh"><span>02</span><h2>三個階段</h2></div>
+    <div class="chain">
+      <div><h3><i>1</i>錢荒期</h3><p>資金緊張，風險最高。</p></div>
+      <div><h3><i>2</i>補水期</h3><p>資金開始回流，壓力減輕中。</p></div>
+      <div><h3><i>3</i>修復期</h3><p>資金面恢復正常，市場進入修復。</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh"><span>03</span><h2>資料來源</h2></div>
+    <p>紐約聯儲、美國財政部、FRED、CFTC、Yahoo Finance，每個交易日自動更新。本頁僅供資訊參考，不構成投資建議。</p>
+  </section>
+</div>
+</body>
+</html>
