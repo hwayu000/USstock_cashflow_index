@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>共識崩塌機制說明</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0f1114;--ink2:#3b424b;--mute:#5c6570;--rule:#e4e7eb;--swiss:#e30613;--amber:#946000;--green:#00875a;
+  --num:"Archivo","Helvetica Neue",Arial,sans-serif;--cjk:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:var(--ink);font:400 18px/1.75 var(--cjk);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+.wrap{max-width:1100px;margin:0 auto;padding:0 40px 80px}
+@media(max-width:820px){.wrap{padding:0 18px 60px}}
+.bar{border-bottom:1px solid var(--ink)}
+.bar .in{max-width:1100px;margin:0 auto;padding:16px 40px;display:flex;gap:24px;align-items:baseline}
+@media(max-width:820px){.bar .in{padding:14px 18px}}
+.bar b{font-size:20px;font-weight:900}
+.bar a{margin-left:auto;font-size:17px;font-weight:700;color:inherit;text-decoration:none;border-bottom:2px solid var(--swiss);white-space:nowrap}
+h1{font-size:clamp(40px,6.4vw,76px);font-weight:900;line-height:1.12;margin:48px 0 12px;letter-spacing:-.01em}
+.lead{font-size:22px;color:var(--ink2);max-width:36em;margin:0}
+section{margin-top:72px;border-top:1px solid var(--ink);padding-top:18px}
+.sh{display:flex;gap:18px;align-items:baseline}
+.sh span{font:800 56px/1 var(--num);color:var(--swiss)}
+h2{font-size:32px;font-weight:900;margin:0;line-height:1.25}
+p,li{color:var(--ink2)}
+b{color:var(--ink)}
+.chain{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 32px;margin-top:20px}
+@media(max-width:820px){.chain{grid-template-columns:minmax(0,1fr)}}
+.chain div{border-top:1px solid var(--ink);padding:14px 0 22px}
+.chain h3{margin:0;font-size:21px;font-weight:900}
+.chain h3 i{font:700 18px var(--num);font-style:normal;color:var(--swiss);margin-right:8px}
+.chain p{margin:6px 0 0}
+.tbl{overflow-x:auto;margin-top:20px}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:17px}
+th,td{text-align:left;padding:12px 16px 12px 0;border-bottom:1px solid var(--rule);vertical-align:top}
+td:first-child{padding-left:8px}th:first-child{padding-left:8px}
+th{border-bottom:1px solid var(--ink);color:var(--ink2);font-size:16px;white-space:nowrap}
+td.n,th.n{text-align:right;font-family:var(--num);font-weight:700;font-feature-settings:"tnum" 1;white-space:nowrap}
+.note{font-size:16px;color:var(--mute);margin-top:10px}
+.tagv{font-weight:700;white-space:nowrap}
+.ok{color:var(--green)}.warn{color:var(--amber)}
+ul{padding-left:1.2em}li+li{margin-top:6px}
+a{color:inherit}
+</style>
+</head>
+<body>
+<div class="bar"><div class="in"><b>共識崩塌機制說明</b><a href="index.html">← 回雷達</a></div></div>
+<div class="wrap">
+  <h1>共識的厚度<br>由獨立證據決定</h1>
+  <p class="lead">方法來自財經節目《共識為什麼說崩就崩》：人數決定翻轉時的重量，獨立證據決定翻轉的門檻。多數人共用同一模型的判斷時，門檻下降而重量上升。</p>
+
+  <section>
+    <div class="sh"><span>01</span><h2>機制</h2></div>
+    <div class="chain">
+      <div><h3><i>1</i>共識變薄</h3><p>判斷相關係數為 ρ 時，再多人也只等於 1/ρ 份獨立證據。節目取 ρ=0.7，約 1.43 份，一份原始文件就足以推翻。</p></div>
+      <div><h3><i>2</i>同時翻轉</h3><p>資訊趨同使所有人同時抵達臨界線，原本陸續翻轉的過程消失，反應與擾動不成比例。</p></div>
+      <div><h3><i>3</i>建立慢、崩解快</h3><p>依 Bass 擴散，一成到九成相信約需 8.8 天；崩解不需要傳播，以分鐘計。</p></div>
+      <div><h3><i>4</i>快翻快回</h3><p>看多與看空兩個狀態都已存在，群體只是切換，所以恐慌回落也快。</p></div>
+      <div><h3><i>5</i>定價先行</h3><p>翻轉臨近時，選擇權反推的分布會在下方長出第二峰；尾部保險也會變貴。</p></div>
+      <div><h3><i>6</i>損益轉移</h3><p>跳空時做市商虧損約為 ½×|Γ|×ΔS²，與跳幅平方成正比，這筆錢轉給持有 Put 的人。</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh"><span>02</span><h2>三個階段</h2></div>
+    <div class="chain">
+      <div><h3><i>1</i>翻轉前</h3><p><b>判定：</b>未觸發翻轉。</p><p><b>做法：</b>波動安靜時買前端 Put，履約價放第二峰。自身判斷的機率須高於市場定價，倉位以半凱利為上限。</p></div>
+      <div><h3><i>2</i>翻轉過程</h3><p><b>判定：</b>VIX ≥ VIX3M，且 ≥ 前 20 日中位數 ×1.25。</p><p><b>做法：</b>賣給做市商的強制流，不留到反彈。</p></div>
+      <div><h3><i>3</i>恐慌回落</h3><p><b>判定：</b>VIX ≤ 事件高點 ×0.85；超額回到高點時的 25% 即結束。</p><p><b>做法：</b>重新評估，不追賣。</p></div>
+    </div>
+    <p class="note">買的人一多，第二峰與保費會提前反映，差距隨之收窄，方法須持續重估。1.25 倍與 0.85 倍為本站設定，節目未給具體數字。</p>
+  </section>
+
+  <section id="idx">
+    <div class="sh"><span>03</span><h2>共識崩塌指數</h2></div>
+    <div class="chain">
+      <div><h3><i>A</i>翻轉強度</h3><p>VIX ÷ VIX3M 的 5 年百分位。前端恐慌高於中期，代表翻轉正在被定價。來源 Cboe。</p></div>
+      <div><h3><i>B</i>市場同步</h3><p>COR3M 隱含相關的 5 年百分位，對應節目的判斷相關係數 ρ。來源 Cboe。</p></div>
+      <div><h3><i>C</i>Gamma 偏低</h3><p>100 減 GEX 的 5 年百分位。做市商 Gamma 越低，越無法緩衝價格跳動。來源 SqueezeMetrics。</p></div>
+    </div>
+    <p>指數 = 三項等權平均，0 至 100。區間：低 &lt; 40、中 40–60、偏高 60–75、高 ≥ 75。任一來源缺漏時以其餘兩項計算並在頁面標示。</p>
+    <p><b>不納入 SKEW：</b>SKEW 與後續大跌呈反向（AUC 低於 0.5），尾部保險貴代表風險已被定價，與節目說法一致。</p>
+    <p><b>區分力（AUC，0.5 為隨機，1 為完美）：</b>預測之後 21 日 SPX 回撤超過 5% 與 10%。</p>
+    <div class="tbl"><table>
+      <thead><tr><th>期間</th><th class="n">天數</th><th class="n">指數</th><th class="n">只看 VIX</th><th class="n">A 翻轉</th><th class="n">B 同步</th><th class="n">C Gamma</th><th class="n">SKEW</th></tr></thead>
+      <tbody id="auc"></tbody>
+    </table></div>
+    <p class="note">每格為「回撤超過 5%／超過 10%」。成分 B、C 是看過初次回測後才選入，權重與區間門檻則在驗證前寫定；樣本內結果，2015–2020 年對 5% 回撤的區分力不如只看 VIX。</p>
+  </section>
+
+  <section>
+    <div class="sh"><span>04</span><h2>訊號能信到什麼程度</h2></div>
+    <p>只統計非事件日，條件成立後 21 個交易日的情況，區間 <span id="btr"></span>。樣本重疊，適合判斷方向，不適合當勝率。</p>
+    <ul id="btn"></ul>
+    <div class="tbl"><table>
+      <thead><tr><th>條件</th><th class="n">天數</th><th class="n">21 日內翻轉</th><th class="n">回撤超過 5%</th><th class="n">回撤超過 10%</th></tr></thead>
+      <tbody id="bt"></tbody>
+    </table></div>
+    <p class="note">＊ 看過初次回測後才加入，並非事前設定。COR3M 的差異主要來自 2021 年後；2015–2020 年高同步樣本只有 72 日且未見同樣結果。</p>
+  </section>
+
+  <section>
+    <div class="sh"><span>05</span><h2>節目數字查核</h2></div>
+    <div class="tbl"><table>
+      <thead><tr><th>節目說法</th><th>查核結果</th><th>判定</th></tr></thead>
+      <tbody>
+        <tr><td>KOSPI 今年熔斷 10 次、歷年 16 次</td><td>11/6 再度觸發，報導為第 11 次、歷年第 17 次</td><td class="tagv ok">相符，已再增加</td></tr>
+        <tr><td>2024/8/5 VIX 盤中 65.73、收盤 38.57，7 日回到中位數</td><td>Cboe 歷史資料相同，8/14 收 16.19</td><td class="tagv ok">相符</td></tr>
+        <tr><td>同類回落歷史平均約 170 日</td><td>收盤首度站上 35 的 15 次事件平均 149.9 日；2020、2022 年仍超過 270 日，並非都變快</td><td class="tagv warn">量級相符，有例外</td></tr>
+        <tr><td>10/12–15 SKEW 約 150–160，約 90% 高位</td><td>154.74–160.45；155 約為近 5 年第 90 百分位</td><td class="tagv ok">相符</td></tr>
+        <tr><td>歐洲央行實驗：AI 投資者一起贖回</td><td>僅 Q-learning 型如此；LLM 型因信念分歧反而削弱協同，節目未提</td><td class="tagv warn">部分相符</td></tr>
+        <tr><td>SPINE 測試：Sonnet 42%→74%、Gemini 3.1 Pro 51%→97%</td><td>數字相符；測的是錯誤前提類問題，引申到投資判斷是節目推論</td><td class="tagv ok">相符，推論需留意</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <div class="sh"><span>06</span><h2>資料來源</h2></div>
+    <ul>
+      <li><b>Cboe 官方：</b><a href="https://www.cboe.com/tradable_products/vix/vix_historical_data/" target="_blank" rel="noopener">VIX 系列、SKEW、COR3M、DSPX、SPX 歷史資料</a>與 SPX 延遲選擇權報價，階段判定的唯一依據。Yahoo 為備援，每日比對最近 5 日。</li>
+      <li><b>SqueezeMetrics：</b><a href="https://squeezemetrics.com/monitor/dix" target="_blank" rel="noopener">GEX</a>，2011 年起的每日資料。</li>
+      <li><b>Yahoo Finance：</b>K 線與 KOSPI 跌幅，KOSPI 以 Naver 備援。盤中跌破 −8% 的日線代理，對照今年報導的 11 次熔斷全部命中，多計 1 日（7/2）。</li>
+      <li><b>查核引用：</b><a href="https://www.etoday.co.kr/news/view/2644976" target="_blank" rel="noopener">이투데이</a>、<a href="https://www.ecb.europa.eu/press/research-publications/resbull/2026/html/ecb.rb260521~4d8b12940b.en.html" target="_blank" rel="noopener">ECB Research Bulletin 143</a>、<a href="https://arxiv.org/abs/2609.09090" target="_blank" rel="noopener">SPINE</a>。</li>
+    </ul>
+    <p>本頁僅供資訊參考，不構成投資建議。選擇權可能損失全部權利金。</p>
+  </section>
+</div>
+<script src="data/data.js"></script>
+<script src="mech.js"></script>
+</body>
+</html>

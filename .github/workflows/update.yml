@@ -16,10 +16,12 @@ jobs:
         with: { python-version: "3.12" }
       - name: 更新資料
         run: python scripts/update.py
+      - name: 更新共識崩塌雷達
+        run: python consensus/scripts/update.py || echo "::warning::共識崩塌雷達更新失敗，沿用上次資料"
       - name: 提交新資料
         run: |
           git config user.name "dashboard-bot"
           git config user.email "dashboard-bot@users.noreply.github.com"
-          git add data/
+          git add data/ consensus/data/
           git diff --cached --quiet || git commit -m "data: $(date -u +'%Y-%m-%d %H:%M') UTC"
           git push

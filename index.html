@@ -250,11 +250,12 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opa
 .foot{border-top:1px solid var(--line2);font-family:var(--mono2);font-size:14px}
 .legend .bar_{display:inline-flex;gap:2px;align-items:flex-end}
 .legend .bar_ i{width:5px;border-radius:1px}
+.tabs{display:inline-flex;background:var(--tagbg);border-radius:999px;padding:3px;gap:2px}.tabs a{font-size:16px;font-weight:800;color:var(--ink2);text-decoration:none;padding:5px 14px;border-radius:999px;white-space:nowrap}.tabs a:hover{color:var(--ink)}.tabs a[aria-current]{background:var(--ink);color:#fff}@media(max-width:560px){.tabs a{font-size:15px;padding:5px 11px}}
 </style>
 </head>
 <body>
 <header class="bar"><div class="in">
-  <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 26 26"><defs><clipPath id="lc"><circle cx="13" cy="13" r="12.5"/></clipPath></defs><g clip-path="url(#lc)" fill="#0f1114"><rect x="1.0" y="9" width="1.1" height="8"/><rect x="3.2" y="6" width="1.1" height="15"/><rect x="5.4" y="3" width="1.1" height="22"/><rect x="7.6" y="1" width="1.1" height="24"/><rect x="9.8" y="0" width="1.1" height="27"/><rect x="12.0" y="2" width="1.1" height="24"/><rect x="14.2" y="5" width="1.1" height="16"/><rect x="16.4" y="1" width="1.1" height="25"/><rect x="18.6" y="4" width="1.1" height="20"/><rect x="20.8" y="7" width="1.1" height="12"/><rect x="23.0" y="10" width="1.1" height="7"/><rect x="25.2" y="8" width="1.1" height="12"/></g></svg></span>黃金錢荒儀表板</div>
+  <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 26 26"><defs><clipPath id="lc"><circle cx="13" cy="13" r="12.5"/></clipPath></defs><g clip-path="url(#lc)" fill="#0f1114"><rect x="1.0" y="9" width="1.1" height="8"/><rect x="3.2" y="6" width="1.1" height="15"/><rect x="5.4" y="3" width="1.1" height="22"/><rect x="7.6" y="1" width="1.1" height="24"/><rect x="9.8" y="0" width="1.1" height="27"/><rect x="12.0" y="2" width="1.1" height="24"/><rect x="14.2" y="5" width="1.1" height="16"/><rect x="16.4" y="1" width="1.1" height="25"/><rect x="18.6" y="4" width="1.1" height="20"/><rect x="20.8" y="7" width="1.1" height="12"/><rect x="23.0" y="10" width="1.1" height="7"/><rect x="25.2" y="8" width="1.1" height="12"/></g></svg></span><span class="tabs" aria-label="儀表板切換"><a aria-current="page">黃金錢荒</a><a href="consensus/index.html">共識崩塌</a></span></div>
   <span class="live" id="stamp">—</span>
   <nav><a href="#hist">歷次對照</a><a href="#sig">訊號</a><a class="go" href="機制說明.html">機制說明<i>→</i></a></nav>
 </div></header>
