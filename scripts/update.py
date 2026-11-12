@@ -38,10 +38,35 @@ def get(url, tries=3, deadline=60):
 FRED_DOWN = False  # 斷路器：本輪 FRED 失敗一次就不再嘗試，直接走備援
 
 
+def _fred_api(sid, key):
+    """官方 API（api.stlouisfed.org，需免費 key）。錯誤訊息不得帶出 key。"""
+    url = ("https://api.stlouisfed.org/fred/series/observations?"
+           + urllib.parse.urlencode({"series_id": sid, "api_key": key, "file_type": "json", "observation_start": START}))
+    try:
+        js = json.loads(get(url, tries=2, deadline=25))
+    except Exception as e:
+        raise ConnectionError(f"FRED API：{type(e).__name__} {str(e).replace(key, '***')[:120]}") from None
+    out = []
+    for o in js.get("observations", []):
+        try:
+            out.append([o["date"], float(o["value"])])
+        except (KeyError, ValueError):
+            pass  # 假日的 "." 空值
+    if not out:
+        raise ValueError("FRED API 回傳空資料")
+    return out
+
+
 def fred(sid):
     global FRED_DOWN
     if FRED_DOWN:
         raise ConnectionError("FRED 本輪已判定不可用")
+    key = os.environ.get("FRED_API_KEY", "").strip()
+    if key:
+        try:
+            return _fred_api(sid, key)
+        except Exception as e:
+            print(f"  [warn] {sid} {e}，改試公開 CSV")
     try:
         txt = get(f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={sid}&cosd={START}", tries=2, deadline=25)
     except Exception:
