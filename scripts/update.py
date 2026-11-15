@@ -509,13 +509,39 @@ def digest(out, old):
     left = f"，TGA 距目標還要放 {f((bal - 850) * 10)} 億" if bal and bal > 850 else ""
 
     phase_names = ["", "錢荒期", "補水期", "修復期"]
-    head = f"<b>黃金錢荒｜{E(out['regime'])}</b>"
+    head = f"<b>黃金錢荒｜{E(out['regime'])}（{out['phase']}/3）</b>　資金面紅燈 {out['stress']} 項"
     if "phase" in old and old["phase"] != out["phase"]:
         head += f"\n🔔 階段變化：{phase_names[old['phase']]} → {E(out['regime'])}"
+    head += "\n" + " → ".join(f"<b>{n}</b>" if k == out["phase"] else n for k, n in enumerate(phase_names) if k)
     lines = [head, "",
              f"{dot[sp['level']]} ① 錢荒：<b>{q1}</b>　SOFR−IORB {f(sp['value'], 1, True)} bp",
-             f"{dot[refill_lv]} ② 補水：<b>{q2}</b>　RMP {f((rm['value'] or 0) * 10, 0, True)} / 200 億{left}",
-             f"{dot[gl['level']]} ③ 收復：<b>{q3}</b>　GLD {f(gl['value'], 2)}（369 / 373）"]
+             E("　　危險 >5 bp｜解除 ≤0 bp 連 3 日"),
+             f"{dot[refill_lv]} ② 補水：<b>{q2}</b>　RMP 四週 {f((rm['value'] or 0) * 10, 0, True)} 億",
+             E("　　來了 ≥200 億｜還沒 <20 億")] + ([f"　　{left.lstrip('，')}"] if left else []) + [
+             f"{dot[gl['level']]} ③ 收復：<b>{q3}</b>　GLD {f(gl['value'], 2)}",
+             E("　　收復 ≥373｜一半 369–373｜還沒 <369")]
+
+    # 下一步（與頁面「next」卡同一套規則）
+    if out["phase"] == 1:
+        cur, goal, nh, nraw = max(0, rm["value"] or 0) * 10, 200, "補水啟動", f"RMP 四週 {f(max(0, rm['value'] or 0) * 10)} → 200 億"
+    elif out["phase"] == 2:
+        cur, goal, nh, nraw = max(0, 15 - (sp["value"] or 15)), 15, "錢荒解除", f"SOFR−IORB {f(sp['value'], 1, True)} → 0 bp 連 3 日"
+    else:
+        cot = by["cot"]["value"]
+        cur, goal, nh, nraw = (max(0, 70 - cot), 30, "籌碼洗乾淨", f"投機淨多 {f(cot)}% → 40%") if cot is not None else (0, 1, "籌碼洗乾淨", "COT 無資料")
+    lines += ["", f"<b>下一步：{nh}</b>　{E(nraw)}，進度 {round(max(0, min(1, cur / goal)) * 100)}%"]
+
+    # 紅燈指標：列出目前數值與紅燈條件
+    def red_rule(rule):
+        seg = next((s for s in rule.split("｜") if "紅" in s), "")
+        return re.sub(r"\s*紅.*$", "", seg).strip()
+    reds = [i for i in out["indicators"] if i["level"] == "red"]
+    if reds:
+        lines += ["", "<b>紅燈指標</b>（數值｜紅燈條件）"]
+        for i in reds:
+            v = i["value"]
+            vs = "—" if v is None else (f"{v:,.3f}".rstrip("0").rstrip(".") if abs(v) < 10 else f"{v:,.2f}")
+            lines.append(f"🔴 {E(i['name'])} {vs} {E(i['unit'])}｜{E(red_rule(i.get('rule', '')))}")
 
     flips = [a for a in out["alerts"] if a["id"] in old and old[a["id"]] != a["on"]]
     if flips:

@@ -590,8 +590,37 @@ def notify(out):
     if old.get("band") is not None and s["band"] is not None and old["band"] != s["band"]:
         changed = True
         lines.append(f"🔔 區間變化：{out['bins'][old['band']][2]} → {out['bins'][s['band']][2]}")
-    lines += ["", f"翻轉 {s['A']:.0f}　同步 {s['B']:.0f}　Gamma 偏低 {s['C']:.0f}（5 年百分位）" if None not in (s["A"], s["B"], s["C"]) else "成分有缺，見頁面",
-              f"VIX {s['vix']:.2f}　VIX/VIX3M {s['ratio']:.2f}"]
+    ph = out["phase"]
+    lines.append(f"階段 {ph}/3：" + " → ".join(f"<b>{PHASES[k]}</b>" if k == ph else PHASES[k] for k in (1, 2, 3)))
+    lines += ["", E("區間：<40 低｜40–60 中｜60–75 偏高（警示）｜≥75 高（危險）")]
+    cal = out.get("cal") or {}
+    cb = (cal.get("bins") or [None] * 4)[s["band"]] if s["band"] is not None else None
+    if cb and cal.get("base"):
+        lines.append(f"歷史上在「{cb['name']}」區，21 日內 SPX 跌超過 10% 的比例 {cb['d10']:.1f}%、超過 5% 為 {cb['d5']:.1f}%（全期平均 {cal['base']['d10']:.1f}%／{cal['base']['d5']:.1f}%）")
+
+    def comp(name, p, extra):
+        if p is None:
+            return f"⚪ {name}：無資料"
+        return f"{'🔴' if p >= 75 else '🟡' if p >= 60 else '🟢'} {name} <b>{p:.0f}</b>　{extra}"
+    lines += ["", "<b>成分</b>（5 年百分位，≥75 為警戒）",
+              comp("翻轉強度", s["A"], E(f"VIX/VIX3M {s['ratio']:.2f}（>1 代表前端恐慌高於中期）")),
+              comp("市場同步", s["B"], f"COR3M {s['cor3m']:.1f}" if s.get("cor3m") is not None else ""),
+              comp("Gamma 偏低", s["C"], f"GEX {s['gex']:+.2f} 十億美元" if s.get("gex") is not None else "")]
+
+    # 下一步（與頁面階段卡同一套規則）
+    nx = None
+    if ph == 2 and s.get("peak"):
+        gate = s["peak"] * RECOVER_DROP
+        nx = (f"進入恐慌回落：VIX ≤ {gate:.2f}（高點 {s['peak']:.2f} ×0.85）", (s["peak"] - s["vix"]) / (s["peak"] - gate))
+    elif ph == 3 and s.get("peak") and s.get("evBase") is not None:
+        gate = s["evBase"] + .25 * (s["peak"] - s["evBase"])
+        nx = (f"回落完成：VIX ≤ {gate:.2f}（超額回到高點時的 25%）", (s["peak"] - s["vix"]) / (s["peak"] - gate))
+    elif ph == 1 and s.get("vix3m") and s.get("base"):
+        gate = max(s["vix3m"], 1.25 * s["base"])
+        nx = (f"翻轉觸發：VIX ≥ {gate:.2f}（高於 VIX3M 且 ≥ 20 日中位數 ×1.25）", s["vix"] / gate)
+    lines += ["", f"VIX <b>{s['vix']:.2f}</b>（5 年第 {s['vixp']:.0f} 百分位）" if s.get("vixp") is not None else f"VIX {s['vix']:.2f}"]
+    if nx:
+        lines.append(f"<b>下一步</b>　{E(nx[0])}，進度 {round(max(0, min(1, nx[1])) * 100)}%")
     flips = [a for a in out["alerts"] if a["id"] in old and old[a["id"]] != a["on"]]
     if flips:
         changed = True
