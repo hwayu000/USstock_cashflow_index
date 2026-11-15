@@ -574,6 +574,24 @@ def _send(token, chat, text):
         return r.status
 
 
+def emoji_gauge(score, n=12):
+    """指數 0–100 分區色塊（低綠／中黃／偏高橘／高紅），📍 標目前位置。"""
+    cells = []
+    for k in range(n):
+        c = (k + .5) * 100 / n
+        cells.append("🟩" if c < 40 else "🟨" if c < 60 else "🟧" if c < 75 else "🟥")
+    cells[min(n - 1, max(0, int(score / 100 * n)))] = "📍"
+    return "".join(cells)
+
+
+def pbar(p, n=20):
+    """百分位條（等寬），在 75 的位置畫警戒線 ┃。"""
+    on = round(max(0, min(100, p)) / 100 * n)
+    cells = ["█" if k < on else "░" for k in range(n)]
+    cut = round(.75 * n)
+    return "".join(cells[:cut]) + "┃" + "".join(cells[cut:])
+
+
 def notify(out):
     """DAILY=1：每天推日報。未設：只在階段、警示或資料停更變化時推。沒設 token 時只印出，不送出。"""
     old = load_prior(STATE) or {}
@@ -591,21 +609,24 @@ def notify(out):
         changed = True
         lines.append(f"🔔 區間變化：{out['bins'][old['band']][2]} → {out['bins'][s['band']][2]}")
     ph = out["phase"]
-    lines.append(f"階段 {ph}/3：" + " → ".join(f"<b>{PHASES[k]}</b>" if k == ph else PHASES[k] for k in (1, 2, 3)))
-    lines += ["", E("區間：<40 低｜40–60 中｜60–75 偏高（警示）｜≥75 高（危險）")]
+    if s["score"] is not None:
+        lines += ["", emoji_gauge(s["score"]), E("0 低 ─ 40 中 ─ 60 偏高（警示）─ 75 高（危險）─ 100")]
     cal = out.get("cal") or {}
     cb = (cal.get("bins") or [None] * 4)[s["band"]] if s["band"] is not None else None
     if cb and cal.get("base"):
         lines.append(f"歷史上在「{cb['name']}」區，21 日內 SPX 跌超過 10% 的比例 {cb['d10']:.1f}%、超過 5% 為 {cb['d5']:.1f}%（全期平均 {cal['base']['d10']:.1f}%／{cal['base']['d5']:.1f}%）")
 
+    lines += ["", f"階段 {ph}/3", " ─ ".join(("✅ " + PHASES[k]) if k < ph else (f"📍 <b>{PHASES[k]}</b>" if k == ph else "⚪ " + PHASES[k]) for k in (1, 2, 3))]
+
     def comp(name, p, extra):
         if p is None:
             return f"⚪ {name}：無資料"
-        return f"{'🔴' if p >= 75 else '🟡' if p >= 60 else '🟢'} {name} <b>{p:.0f}</b>　{extra}"
-    lines += ["", "<b>成分</b>（5 年百分位，≥75 為警戒）",
+        return "\n".join([f"{'🔴' if p >= 75 else '🟡' if p >= 60 else '🟢'} {name} <b>{p:.0f}</b>",
+                          f"<code>{pbar(p)}</code>", extra, ""])
+    lines += ["", "<b>成分</b>（5 年百分位，┃ 為 75 警戒線）",
               comp("翻轉強度", s["A"], E(f"VIX/VIX3M {s['ratio']:.2f}（>1 代表前端恐慌高於中期）")),
               comp("市場同步", s["B"], f"COR3M {s['cor3m']:.1f}" if s.get("cor3m") is not None else ""),
-              comp("Gamma 偏低", s["C"], f"GEX {s['gex']:+.2f} 十億美元" if s.get("gex") is not None else "")]
+              comp("Gamma 偏低", s["C"], f"GEX {s['gex']:+.2f} 十億美元" if s.get("gex") is not None else "").rstrip()]
 
     # 下一步（與頁面階段卡同一套規則）
     nx = None
@@ -620,7 +641,7 @@ def notify(out):
         nx = (f"翻轉觸發：VIX ≥ {gate:.2f}（高於 VIX3M 且 ≥ 20 日中位數 ×1.25）", s["vix"] / gate)
     lines += ["", f"VIX <b>{s['vix']:.2f}</b>（5 年第 {s['vixp']:.0f} 百分位）" if s.get("vixp") is not None else f"VIX {s['vix']:.2f}"]
     if nx:
-        lines.append(f"<b>下一步</b>　{E(nx[0])}，進度 {round(max(0, min(1, nx[1])) * 100)}%")
+        lines += [f"<b>下一步</b>　{E(nx[0])}", f"<code>{'▰' * round(max(0, min(1, nx[1])) * 20)}{'▱' * (20 - round(max(0, min(1, nx[1])) * 20))}</code> {round(max(0, min(1, nx[1])) * 100)}%"]
     flips = [a for a in out["alerts"] if a["id"] in old and old[a["id"]] != a["on"]]
     if flips:
         changed = True
