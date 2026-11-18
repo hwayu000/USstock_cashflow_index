@@ -595,6 +595,121 @@ def digest(out, old):
     return "\n".join(lines), bool(flips) or ("phase" in old and old["phase"] != out["phase"])
 
 
+def _send_rich(token, chat, rich_html):
+    """Bot API Rich Message（表格/折疊區/按鈕）。失敗會丟例外，由呼叫端退回舊版 digest。"""
+    body = json.dumps({"chat_id": chat, "rich_message": {"html": rich_html}}, ensure_ascii=False).encode()
+    req = urllib.request.Request(f"https://api.telegram.org/bot{token}/sendRichMessage", data=body,
+                                 headers={"Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:
+            return r.status
+    except urllib.error.HTTPError as e:
+        raise RuntimeError(e.read().decode("utf-8", "replace")[:200])
+
+
+def zone_gap(g, v, unit="", mult=1):
+    """取代 emoji 色塊量尺：回傳「離下一個燈號差多少」的文字（紅→黃、黃→綠；綠燈則是離黃燈的緩衝）。"""
+    if not g or v is None:
+        return ""
+    rank = {"red": 0, "yellow": 1, "green": 2}
+    zs = g["zones"]
+    cur = next((z for z in zs if z[0] <= v <= z[1]), zs[0] if v < zs[0][0] else zs[-1])
+    lv = cur[2]
+    fmt = lambda x: (lambda y: (f"{y:,.3f}".rstrip("0").rstrip(".") if abs(y) < 10 else f"{y:,.1f}") + unit)(x * mult)
+    if lv == "green":
+        nb = [z for z in zs if z[2] == "yellow"]
+        edge = min((b for z in nb for b in (z[0], z[1])), key=lambda b: abs(b - v)) if nb else None
+        return f"🟢 離黃燈還有 {fmt(abs(edge - v))}" if edge is not None else "🟢"
+    want = "yellow" if lv == "red" else "green"
+    nb = [z for z in zs if z[2] == want]
+    if not nb:
+        return ""
+    edge = min((b for z in nb for b in (z[0], z[1])), key=lambda b: abs(b - v))
+    return f"{'🟡' if want == 'yellow' else '🟢'} 差 {fmt(abs(edge - v))} 到{'黃' if want == 'yellow' else '綠'}燈"
+
+
+def rich_digest(out, old):
+    """與 digest() 同一份資訊，改成 Rich Message 版型：三問用表格、量尺與紅燈細節收進折疊區、連結改按鈕。"""
+    E = html.escape
+    by = {i["id"]: i for i in out["indicators"]}
+    A = {a["id"]: a for a in out["alerts"]}
+    dot = {"red": "🔴", "yellow": "🟡", "green": "🟢", "gray": "⚪"}
+
+    def f(v, d=0, sign=False):
+        return "—" if v is None else (f"{v:+,.{d}f}" if sign else f"{v:,.{d}f}")
+
+    sp, rm, gl, tga = by["spread"], by["rmp"], by["gld"], by["tga"]
+    q1 = {"red": "還在", "yellow": "緩解中", "green": "解除"}.get(sp["level"], "—")
+    refill_lv = "green" if A["refill"]["on"] else ("yellow" if rm["level"] == "yellow" or tga["level"] == "green" else "red")
+    q2 = {"red": "還沒", "yellow": "在路上", "green": "來了"}[refill_lv]
+    q3 = {"red": "還沒", "yellow": "一半", "green": "收復"}.get(gl["level"], "—")
+    bal = (tga.get("series") or [[None, None]])[-1][1]
+    left = f"TGA 距目標還要放 {f((bal - 850) * 10)} 億" if bal and bal > 850 else ""
+    phase_names = ["", "錢荒期", "補水期", "修復期"]
+    changed_phase = "phase" in old and old["phase"] != out["phase"]
+
+    h = [f"<h3>黃金錢荒｜{E(out['regime'])}（{out['phase']}/3）</h3>"]
+    if changed_phase:
+        h.append(f"<blockquote>🔔 階段變化：{phase_names[old['phase']]} → <b>{E(out['regime'])}</b></blockquote>")
+    track = " ─ ".join(("✅ " + n) if k < out["phase"] else (f"📍 <b>{n}</b>" if k == out["phase"] else "⚪ " + n)
+                       for k, n in enumerate(phase_names) if k)
+    h.append(f"<p>{track}</p><p>資金面紅燈 <b>{out['stress']}</b> 項</p>")
+    rows = [("① 錢荒", sp["level"], q1, f"SOFR−IORB {f(sp['value'], 1, True)} bp"),
+            ("② 補水", refill_lv, q2, f"RMP 四週 {f((rm['value'] or 0) * 10, 0, True)} 億"),
+            ("③ 收復", gl["level"], q3, f"GLD {f(gl['value'], 2)}")]
+    gaps = [zone_gap(sp.get("gauge"), sp["value"], " bp"), zone_gap(rm.get("gauge"), rm["value"], " 億", 10), zone_gap(gl.get("gauge"), gl["value"])]
+    h.append("<table bordered striped compact><tr><th>三問</th><th>狀態</th><th align=\"right\">數值</th></tr>"
+             + "".join(f"<tr><td>{n}</td><td>{dot[lv]} <b>{s}</b></td><td align=\"right\">{E(v)}<br><sub>{E(gp)}</sub></td></tr>"
+                       for (n, lv, s, v), gp in zip(rows, gaps))
+             + "</table>")
+    h.append("<details><summary>門檻</summary><ul>"
+             "<li>① 錢荒　危險 &gt;5 bp｜解除 ≤0 bp 連 3 日</li>"
+             f"<li>② 補水　來了 ≥200 億｜還沒 &lt;20 億{('<br>' + E(left)) if left else ''}</li>"
+             "<li>③ 收復　收復 ≥373｜一半 369–373｜還沒 &lt;369</li></ul></details>")
+
+    if out["phase"] == 1:
+        cur, goal, nh, nraw = max(0, rm["value"] or 0) * 10, 200, "補水啟動", f"RMP 四週 {f(max(0, rm['value'] or 0) * 10)} → 200 億"
+    elif out["phase"] == 2:
+        cur, goal, nh, nraw = max(0, 15 - (sp["value"] or 15)), 15, "錢荒解除", f"SOFR−IORB {f(sp['value'], 1, True)} → 0 bp 連 3 日"
+    else:
+        cot = by["cot"]["value"]
+        cur, goal, nh, nraw = (max(0, 70 - cot), 30, "籌碼洗乾淨", f"投機淨多 {f(cot)}% → 40%") if cot is not None else (0, 1, "籌碼洗乾淨", "COT 無資料")
+    h.append(f"<h4>下一步：{nh}</h4><p>{E(nraw)}<br><code>{bar(cur / goal)}</code> {round(max(0, min(1, cur / goal)) * 100)}%</p>")
+
+    def red_rule(rule):
+        seg = next((s for s in rule.split("｜") if "紅" in s), "")
+        return re.sub(r"\s*紅.*$", "", seg).strip()
+    reds = [i for i in out["indicators"] if i["level"] == "red"]
+    if reds:
+        body = ""
+        for i in reds:
+            v = i["value"]
+            vs = "—" if v is None else (f"{v:,.3f}".rstrip("0").rstrip(".") if abs(v) < 10 else f"{v:,.2f}")
+            q = (i.get("gauge") or {}).get("q", "")
+            body += (f"<tr><td>{E(i['name'])}{('<br><sub>' + E(q) + '</sub>') if q else ''}</td>"
+                     f"<td align=\"right\"><b>{vs}</b> {E(i['unit'])}<br><sub>紅燈 {E(red_rule(i.get('rule', '')))}</sub></td>"
+                     f"<td>{E(zone_gap(i.get('gauge'), v, ' ' + i['unit']))}</td></tr>")
+        h.append(f"<details><summary>🔴 紅燈指標（{len(reds)}）</summary><table bordered striped compact>"
+                 f"<tr><th>指標</th><th align=\"right\">數值</th><th>下一燈</th></tr>{body}</table></details>")
+
+    flips = [a for a in out["alerts"] if a["id"] in old and old[a["id"]] != a["on"]]
+    if flips:
+        h.append("<h4>變化</h4><ul>" + "".join(
+            f"<li>{('🟢' if a['kind'] == 'good' else '🔴') if a['on'] else '⚪'} {E(a['name'])}{'觸發' if a['on'] else '解除'}：{E(a['now'])}</li>"
+            for a in flips) + "</ul>")
+    on = [a for a in out["alerts"] if a["on"]]
+    h.append("<h4>觸發中</h4><ul>" + "".join(f"<li>{'🟢' if a['kind'] == 'good' else '🔴'} {E(a['name'])}：{E(a['now'])}</li>" for a in on)
+             + "</ul>" if on else "<p>觸發中：無</p>")
+    if out["stale"]:
+        h.append(f"<blockquote>⚠️ 資料停更：{E('、'.join(out['stale']))}，相關燈號可能失準</blockquote>")
+    elif old.get("stale"):
+        h.append("<p>✅ 資料源已恢復</p>")
+    url = os.environ.get("DASHBOARD_URL")
+    if url:
+        h.append(f'<tg-button-row><tg-button type="url" style="primary" url="{E(url)}">開儀表板</tg-button></tg-button-row>')
+    return "".join(h)
+
+
 def notify(out):
     """DAILY=1：每天固定推日報。未設：只在警報／階段／資料停更有變化時推（GitHub Actions 用）。"""
     old = {}
@@ -613,6 +728,11 @@ def notify(out):
     if not (token and chat):
         print("[tg] 未設定 token / TG_CHAT_ID，預定推播內容：\n" + msg)
         return
+    try:  # 先送 Rich Message 版型；失敗（API 不支援／解析錯誤）退回原本的 HTML 文字版
+        print("[tg] 已推播（Rich）", _send_rich(token, chat, rich_digest(out, old)))
+        return
+    except Exception as e:
+        print("[tg] Rich 推播失敗，改舊版：", str(e)[:160])
     try:
         print("[tg] 已推播", _send(token, chat, msg))
     except Exception as e:  # HTML 解析失敗等 → 退純文字重送，確保一定送得出去

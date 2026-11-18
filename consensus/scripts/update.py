@@ -656,6 +656,7 @@ def notify(out):
     if url:
         lines += ["", E(url)]
     msg = "\n".join(lines)
+    rich = rich_digest(out, old, s, ph, cb, cal, nx, flips, on, url)
     if not (os.environ.get("DAILY") or changed):
         print("[tg] 無變化，不推播")
         return
@@ -663,7 +664,85 @@ def notify(out):
     if not (tok and chat):
         print("[tg] 未設定 token／TG_CHAT_ID，預定推播內容：\n" + msg)
         return
+    try:  # 先送 Rich Message 版型；失敗退回原本的 HTML 文字版
+        print("[tg] 已推播（Rich）", _send_rich(tok, chat, rich))
+        return
+    except Exception as e:
+        print("[tg] Rich 推播失敗，改舊版：", str(e)[:160])
     print("[tg] 已推播", _send(tok, chat, msg))
+
+
+def _send_rich(token, chat, rich_html):
+    body = json.dumps({"chat_id": chat, "rich_message": {"html": rich_html}}, ensure_ascii=False).encode()
+    req = urllib.request.Request(f"https://api.telegram.org/bot{token}/sendRichMessage", data=body,
+                                 headers={"Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:
+            return r.status
+    except urllib.error.HTTPError as e:
+        raise RuntimeError(e.read().decode("utf-8", "replace")[:200])
+
+
+def rich_digest(out, old, s, ph, cb, cal, nx, flips, on, url):
+    """與 notify() 文字版同一份資訊的 Rich Message 版型：成分用表格、歷史對照與觸發條件收進折疊區、連結改按鈕。"""
+    E = html.escape
+    h = []
+    if s["score"] is not None:
+        h.append(f"<h3>共識崩塌指數 {s['score']:.0f}／100</h3>"
+                 f"<p><mark>{E(out['bins'][s['band']][2])}</mark>　{E(out['phaseName'])}</p>")
+    else:
+        h.append(f"<h3>共識崩塌雷達｜{E(out['phaseName'])}</h3>")
+    bells = []
+    if "phase" in old and old["phase"] != out["phase"]:
+        bells.append(f"🔔 階段變化：{PHASES[old['phase']]} → <b>{E(out['phaseName'])}</b>")
+    if old.get("band") is not None and s["band"] is not None and old["band"] != s["band"]:
+        bells.append(f"🔔 區間變化：{out['bins'][old['band']][2]} → <b>{out['bins'][s['band']][2]}</b>")
+    if bells:
+        h.append("<blockquote>" + "<br>".join(bells) + "</blockquote>")
+    if s["score"] is not None:
+        sc = s["score"]
+        nxt = next(((b, n) for b, n in ((40, "中"), (60, "偏高（警示）"), (75, "高（危險）")) if sc < b), None)
+        gap = f"距「{nxt[1]}」線 {nxt[0]} 還差 <b>{nxt[0] - sc:.0f}</b>" if nxt else "已在最高區間"
+        h.append("<table bordered compact><tr><th>低</th><th>中</th><th>偏高</th><th>高</th></tr><tr>"
+                 + "".join(f"<td align=\"center\">{'📍 ' + format(sc, '.0f') if lo <= sc < hi or (hi == 100 and sc >= lo) else f'{lo}–{hi}'}</td>"
+                           for lo, hi in ((0, 40), (40, 60), (60, 75), (75, 100)))
+                 + f"</tr></table><p>{gap}</p>")
+    h.append("<p>" + " ─ ".join(("✅ " + PHASES[k]) if k < ph else (f"📍 <b>{PHASES[k]}</b>" if k == ph else "⚪ " + PHASES[k])
+                                for k in (1, 2, 3)) + f"　（{ph}/3）</p>")
+
+    def row(name, p, extra):
+        if p is None:
+            return f"<tr><td>⚪ {name}</td><td align=\"right\">—</td><td>無資料</td></tr>"
+        d = "🔴" if p >= 75 else "🟡" if p >= 60 else "🟢"
+        return (f"<tr><td>{d} {name}</td><td align=\"right\"><b>{p:.0f}</b></td><td>{extra}</td></tr>"
+                f"<tr><td colspan=\"3\"><code>{pbar(p)}</code></td></tr>")
+    h.append("<table bordered compact><caption>成分（5 年百分位，┃ 為 75 警戒線）</caption>"
+             "<tr><th>成分</th><th align=\"right\">百分位</th><th>依據</th></tr>"
+             + row("翻轉強度", s["A"], E(f"VIX/VIX3M {s['ratio']:.2f}") if s.get("ratio") is not None else "")
+             + row("市場同步", s["B"], f"COR3M {s['cor3m']:.1f}" if s.get("cor3m") is not None else "")
+             + row("Gamma 偏低", s["C"], f"GEX {s['gex']:+.2f} 十億美元" if s.get("gex") is not None else "")
+             + "</table>")
+    vix = (f"VIX <b>{s['vix']:.2f}</b>（5 年第 {s['vixp']:.0f} 百分位）" if s.get("vixp") is not None
+           else f"VIX {s['vix']:.2f}") if s.get("vix") is not None else ""
+    if nx:
+        p = max(0, min(1, nx[1]))
+        h.append(f"<h4>下一步</h4><p>{E(nx[0])}<br><code>{'▰' * round(p * 20)}{'▱' * (20 - round(p * 20))}</code> {round(p * 100)}%<br>{vix}</p>")
+    elif vix:
+        h.append(f"<p>{vix}</p>")
+    if cb and cal.get("base"):
+        h.append(f"<details><summary>歷史對照：「{E(cb['name'])}」區</summary><p>21 日內 SPX 跌超過 10% 的比例 <b>{cb['d10']:.1f}%</b>、"
+                 f"超過 5% 為 <b>{cb['d5']:.1f}%</b><br>全期平均 {cal['base']['d10']:.1f}%／{cal['base']['d5']:.1f}%</p>"
+                 f"<p><sub>VIX/VIX3M &gt;1 代表前端恐慌高於中期</sub></p></details>")
+    if flips:
+        h.append("<h4>變化</h4><ul>" + "".join(
+            f"<li>{'🔴' if a['on'] else '⚪'} {E(a['name'])}{'觸發' if a['on'] else '解除'}：{E(a['now'])}</li>" for a in flips) + "</ul>")
+    h.append("<h4>觸發中</h4><ul>" + "".join(f"<li>{E(a['name'])}：{E(a['now'])}</li>" for a in on) + "</ul>"
+             if on else "<p>觸發中：無</p>")
+    if out["stale"]:
+        h.append(f"<blockquote>⚠️ 資料停更：{E('、'.join(out['stale']))}</blockquote>")
+    if url:
+        h.append(f'<tg-button-row><tg-button type="url" style="primary" url="{E(url)}">開共識雷達</tg-button></tg-button-row>')
+    return "".join(h)
 
 
 if __name__ == "__main__":
