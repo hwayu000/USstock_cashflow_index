@@ -16,6 +16,8 @@ DATA_DIR = os.path.join(ROOT, "data")
 STATE = os.path.join(DATA_DIR, "state.json")
 SNAP = os.path.join(DATA_DIR, "snapshots.json")
 UA = {"User-Agent": "Mozilla/5.0 (consensus-flip-radar)"}
+API_UA = {"User-Agent": "dashboard-bot/1.0"}
+BTN_TEXT = "開共識崩塌雷達"
 
 # ── 判定規則（先寫定再回測，不依結果調整）──
 PCT_WINDOW = 1260       # 百分位回看 5 年：節目說 SKEW 150–160 約在 90% 高位，5 年窗 155 = 89.8
@@ -41,7 +43,7 @@ def get(url, tries=3, deadline=60):
     for i in range(tries):
         try:
             t0 = time.time()
-            with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=30) as r:
+            with urllib.request.urlopen(urllib.request.Request(url, headers=API_UA if "stlouisfed.org" in url else UA), timeout=30) as r:
                 buf = []
                 while True:
                     c = r.read(65536)
@@ -569,6 +571,8 @@ def _token():
 
 def _send(token, chat, text):
     body = {"chat_id": chat, "text": text, "disable_web_page_preview": "true", "parse_mode": "HTML"}
+    if _kb():
+        body["reply_markup"] = json.dumps(_kb())
     req = urllib.request.Request(f"https://api.telegram.org/bot{token}/sendMessage", data=urllib.parse.urlencode(body).encode())
     with urllib.request.urlopen(req, timeout=30) as r:
         return r.status
@@ -598,6 +602,22 @@ def notify(out):
     new = {"phase": out["phase"], "band": out["sig"]["band"], "stale": out["stale"], **{a["id"]: a["on"] for a in out["alerts"]}}
     with open(STATE, "w", encoding="utf-8") as f:
         json.dump(new, f, ensure_ascii=False)
+
+    # 從較低區間第一次升進「高」區：另推一則醒目警報（不受 DAILY 影響）
+    if old.get("band") is not None and out["sig"]["band"] is not None and old["band"] < 3 and out["sig"]["band"] == 3:
+        _tok, _chat = _token(), os.environ.get("TG_CHAT_ID")
+        _cb = (out["cal"].get("bins") or [None] * 4)[3] if out.get("cal") else None
+        _al = [f"🚨 <b>共識崩塌指數首次進入「高」區</b>",
+               f"{out['bins'][old['band']][2]} → <b>高</b>：{out['sig']['score']:.0f}／100（門檻 75）"]
+        if _cb and _cb.get("d10") is not None:
+            _al.append(f"歷史上進入高區後 21 日內 SPX 跌超過 10% 的比例 {_cb['d10']:.1f}%（全期平均 {out['cal']['base']['d10']:.1f}%）")
+        if _tok and _chat:
+            try:
+                print("[tg] 已推高區警報", _send(_tok, _chat, "\n".join(_al)))
+            except Exception as e:
+                print("[tg] 高區警報失敗：", str(e)[:160])
+        else:
+            print("[tg] 預定高區警報：\n" + "\n".join(_al))
     E = html.escape
     lines = [f"<b>共識崩塌雷達｜{E(out['phaseName'])}</b>"]
     changed = "phase" in old and old["phase"] != out["phase"]
@@ -672,8 +692,19 @@ def notify(out):
     print("[tg] 已推播", _send(tok, chat, msg))
 
 
+
+def _kb():
+    """訊息底部的標準內嵌按鈕（所有 Telegram 版本都會顯示；Rich 內建的 tg-button 部分裝置不顯示）。"""
+    url = os.environ.get("DASHBOARD_URL")
+    return {"inline_keyboard": [[{"text": BTN_TEXT, "url": url}]]} if url else None
+
+
 def _send_rich(token, chat, rich_html):
-    body = json.dumps({"chat_id": chat, "rich_message": {"html": rich_html}}, ensure_ascii=False).encode()
+    rich_html = re.sub(r"<tg-button-row>.*?</tg-button-row>", "", rich_html)
+    payload = {"chat_id": chat, "rich_message": {"html": rich_html}}
+    if _kb():
+        payload["reply_markup"] = _kb()
+    body = json.dumps(payload, ensure_ascii=False).encode()
     req = urllib.request.Request(f"https://api.telegram.org/bot{token}/sendRichMessage", data=body,
                                  headers={"Content-Type": "application/json"})
     try:

@@ -3,7 +3,7 @@
 方法來源：兩支節目（AI 借錢成本／輝達的債），收斂為「債市先於股市」三成分指數。
 環境變數（選填）：FRED_API_KEY（ICE 利差觀察卡；沒有就略過）、TG_BOT_TOKEN 或 TG_ENV_FILE、TG_CHAT_ID、DASHBOARD_URL、DAILY=1
 """
-import csv, html, io, json, math, os, statistics as stats, sys, time, urllib.request, urllib.parse, urllib.error
+import csv, html, io, re, json, math, os, statistics as stats, sys, time, urllib.request, urllib.parse, urllib.error
 from datetime import datetime, timedelta, timezone
 sys.stdout.reconfigure(encoding="utf-8")
 
@@ -12,6 +12,8 @@ DATA_DIR = os.path.join(ROOT, "data")
 CACHE = os.path.join(DATA_DIR, "cache")
 STATE = os.path.join(DATA_DIR, "state.json")
 UA = {"User-Agent": "Mozilla/5.0 (borrow-cost-radar)"}
+API_UA = {"User-Agent": "dashboard-bot/1.0"}
+BTN_TEXT = "開借錢成本雷達"
 
 # ── 事先宣告的參數（看回測結果前定下，之後不為好看改）──
 LB = 21                  # 變化回看 21 個交易日（約一個月）
@@ -30,7 +32,7 @@ def get(url, tries=3, timeout=40):
     last = None
     for i in range(tries):
         try:
-            with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=timeout) as r:
+            with urllib.request.urlopen(urllib.request.Request(url, headers=API_UA if "stlouisfed.org" in url else UA), timeout=timeout) as r:
                 return r.read().decode("utf-8", "replace")
         except Exception as e:
             last = e
@@ -346,13 +348,26 @@ def _token():
 
 def _send(token, chat, text):
     body = {"chat_id": chat, "text": text, "disable_web_page_preview": "true", "parse_mode": "HTML"}
+    if _kb():
+        body["reply_markup"] = json.dumps(_kb())
     req = urllib.request.Request(f"https://api.telegram.org/bot{token}/sendMessage", data=urllib.parse.urlencode(body).encode())
     with urllib.request.urlopen(req, timeout=30) as r:
         return r.status
 
 
+
+def _kb():
+    """訊息底部的標準內嵌按鈕（所有 Telegram 版本都會顯示；Rich 內建的 tg-button 部分裝置不顯示）。"""
+    url = os.environ.get("DASHBOARD_URL")
+    return {"inline_keyboard": [[{"text": BTN_TEXT, "url": url}]]} if url else None
+
+
 def _send_rich(token, chat, rich_html):
-    body = json.dumps({"chat_id": chat, "rich_message": {"html": rich_html}}, ensure_ascii=False).encode()
+    rich_html = re.sub(r"<tg-button-row>.*?</tg-button-row>", "", rich_html)
+    payload = {"chat_id": chat, "rich_message": {"html": rich_html}}
+    if _kb():
+        payload["reply_markup"] = _kb()
+    body = json.dumps(payload, ensure_ascii=False).encode()
     req = urllib.request.Request(f"https://api.telegram.org/bot{token}/sendRichMessage", data=body,
                                  headers={"Content-Type": "application/json"})
     try:
@@ -410,6 +425,22 @@ def notify(out):
     new = {"band": s["band"], "stale": out["stale"], **{a["id"]: a["on"] for a in out["alerts"]}}
     with open(STATE, "w", encoding="utf-8") as f:
         json.dump(new, f, ensure_ascii=False)
+
+    # 從較低區間第一次升進「高」區：另推一則醒目警報（不受 DAILY 影響）
+    if old.get("band") is not None and s["band"] is not None and old["band"] < 3 and s["band"] == 3:
+        _tok, _chat = _token(), os.environ.get("TG_CHAT_ID")
+        _cb = (out["cal"].get("bins") or [None] * 4)[3] if out.get("cal") else None
+        _al = [f"🚨 <b>借錢成本指數首次進入「高」區</b>",
+               f"{out['bins'][old['band']][2]} → <b>高</b>：{s['score']:.0f}／100（門檻 75）"]
+        if _cb and _cb.get("d10") is not None:
+            _al.append(f"歷史上進入高區後 21 日內 SPX 跌超過 10% 的比例 {_cb['d10']:.1f}%（全期平均 {out['cal']['base']['d10']:.1f}%）")
+        if _tok and _chat:
+            try:
+                print("[tg] 已推高區警報", _send(_tok, _chat, "\n".join(_al)))
+            except Exception as e:
+                print("[tg] 高區警報失敗：", str(e)[:160])
+        else:
+            print("[tg] 預定高區警報：\n" + "\n".join(_al))
     bn = BINS[s["band"]][2]
     changed, bells = False, []
     if old.get("band") is not None and old["band"] != s["band"]:

@@ -11,6 +11,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data", "data.json")
 STATE = os.path.join(ROOT, "data", "state.json")
 UA = {"User-Agent": "Mozilla/5.0 (gold-liquidity-dashboard)"}
+API_UA = {"User-Agent": "dashboard-bot/1.0"}
+BTN_TEXT = "開黃金錢荒儀表板"
 START = (datetime.now(timezone.utc) - timedelta(days=420)).strftime("%Y-%m-%d")
 
 
@@ -19,7 +21,7 @@ def get(url, tries=3, deadline=60):
     for i in range(tries):
         try:
             t0 = time.time()
-            with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=min(20, deadline)) as r:
+            with urllib.request.urlopen(urllib.request.Request(url, headers=API_UA if "stlouisfed.org" in url else UA), timeout=min(20, deadline)) as r:
                 buf = []
                 while True:
                     chunk = r.read(65536)
@@ -485,6 +487,8 @@ def _send(token, chat, text, html_mode=True):
     body = {"chat_id": chat, "text": text, "disable_web_page_preview": "true"}
     if html_mode:
         body["parse_mode"] = "HTML"
+    if _kb():
+        body["reply_markup"] = json.dumps(_kb())
     req = urllib.request.Request(f"https://api.telegram.org/bot{token}/sendMessage", data=urllib.parse.urlencode(body).encode())
     with urllib.request.urlopen(req, timeout=30) as r:
         return r.status
@@ -595,9 +599,20 @@ def digest(out, old):
     return "\n".join(lines), bool(flips) or ("phase" in old and old["phase"] != out["phase"])
 
 
+
+def _kb():
+    """訊息底部的標準內嵌按鈕（所有 Telegram 版本都會顯示；Rich 內建的 tg-button 部分裝置不顯示）。"""
+    url = os.environ.get("DASHBOARD_URL")
+    return {"inline_keyboard": [[{"text": BTN_TEXT, "url": url}]]} if url else None
+
+
 def _send_rich(token, chat, rich_html):
     """Bot API Rich Message（表格/折疊區/按鈕）。失敗會丟例外，由呼叫端退回舊版 digest。"""
-    body = json.dumps({"chat_id": chat, "rich_message": {"html": rich_html}}, ensure_ascii=False).encode()
+    rich_html = re.sub(r"<tg-button-row>.*?</tg-button-row>", "", rich_html)
+    payload = {"chat_id": chat, "rich_message": {"html": rich_html}}
+    if _kb():
+        payload["reply_markup"] = _kb()
+    body = json.dumps(payload, ensure_ascii=False).encode()
     req = urllib.request.Request(f"https://api.telegram.org/bot{token}/sendRichMessage", data=body,
                                  headers={"Content-Type": "application/json"})
     try:
