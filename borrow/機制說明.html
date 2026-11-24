@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>借錢成本機制說明</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0f1114;--ink2:#3b424b;--mute:#5c6570;--rule:#e4e7eb;--swiss:#e30613;--amber:#946000;--green:#00875a;
+  --num:"Archivo","Helvetica Neue",Arial,sans-serif;--cjk:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:var(--ink);font:400 18px/1.75 var(--cjk);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+.wrap{max-width:1100px;margin:0 auto;padding:0 40px 80px}
+@media(max-width:820px){.wrap{padding:0 18px 60px}}
+.bar{border-bottom:1px solid var(--ink)}
+.bar .in{max-width:1100px;margin:0 auto;padding:16px 40px;display:flex;gap:24px;align-items:baseline}
+@media(max-width:820px){.bar .in{padding:14px 18px}}
+.bar b{font-size:20px;font-weight:900}
+.bar a{margin-left:auto;font-size:17px;font-weight:700;color:inherit;text-decoration:none;border-bottom:2px solid var(--swiss);white-space:nowrap}
+h1{font-size:clamp(40px,6.4vw,76px);font-weight:900;line-height:1.12;margin:48px 0 12px;letter-spacing:-.01em}
+.lead{font-size:22px;color:var(--ink2);max-width:36em;margin:0}
+section{margin-top:72px;border-top:1px solid var(--ink);padding-top:18px}
+.sh{display:flex;gap:18px;align-items:baseline}
+.sh span{font:800 56px/1 var(--num);color:var(--swiss)}
+h2{font-size:32px;font-weight:900;margin:0;line-height:1.25}
+p,li{color:var(--ink2)}
+b{color:var(--ink)}
+.chain{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 32px;margin-top:20px}
+@media(max-width:820px){.chain{grid-template-columns:minmax(0,1fr)}}
+.chain div{border-top:1px solid var(--ink);padding:14px 0 22px}
+.chain h3{margin:0;font-size:21px;font-weight:900}
+.chain h3 i{font:700 18px var(--num);font-style:normal;color:var(--swiss);margin-right:8px}
+.chain p{margin:6px 0 0}
+.tbl{overflow-x:auto;margin-top:20px}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:17px}
+th,td{text-align:left;padding:12px 16px 12px 0;border-bottom:1px solid var(--rule);vertical-align:top}
+td:first-child{padding-left:8px}th:first-child{padding-left:8px}
+th{border-bottom:1px solid var(--ink);color:var(--ink2);font-size:16px;white-space:nowrap}
+td.n,th.n{text-align:right;font-family:var(--num);font-weight:700;font-feature-settings:"tnum" 1;white-space:nowrap}
+.note{font-size:16px;color:var(--mute);margin-top:10px}
+.tagv{font-weight:700;white-space:nowrap}
+.ok{color:var(--green)}.warn{color:var(--amber)}
+ul{padding-left:1.2em}li+li{margin-top:6px}
+a{color:inherit}
+</style>
+</head>
+<body>
+<div class="bar"><div class="in"><b>借錢成本機制說明</b><a href="index.html">← 回雷達</a></div></div>
+<div class="wrap">
+  <h1>錢沒有不見<br>是變貴了</h1>
+  <p class="lead">方法收斂自兩支財經節目：一支拆解隔夜資金、國債結算日與 AI 借錢成本，一支從 CoreWeave 的債看輝達的反彈。共同結論是債市比股市先反映壓力，要看借錢的價格，而不是只看錢夠不夠。</p>
+
+  <section>
+    <div class="sh"><span>01</span><h2>機制</h2></div>
+    <div class="chain">
+      <div><h3><i>1</i>管道沒有炸</h3><p>11/3 SOFR − IORB 峰值 +7bp，常備回購單日最多 1.04 億美元；2025/10/31 是 +32bp、504 億。差兩個數量級，震中不在國債市場。</p></div>
+      <div><h3><i>2</i>準備金帳本</h3><p>準備金變動 ＝ 聯準會證券變動 − TGA 變動 − 逆回購變動 − 流通現金變動。10/7–10/28 準備金少 1,268 億、TGA 多 1,298 億，低點來自財政部攢現金。</p></div>
+      <div><h3><i>3</i>結算日才抽錢</h3><p>拍賣日不交錢，結算日才從準備金拿走。逆回購只剩 3.31 億，緩衝用完，壓力集中在 11/30、12/15、12/31 這類大額結算日。</p></div>
+      <div><h3><i>4</i>短端領漲＝加息重估</h3><p>11/9 到 11/13，2 年期升 32bp、10 年期升 27bp，隱含通脹下降。短端升得比長端多，是市場在重估加息，不是國債發太多。</p></div>
+      <div><h3><i>5</i>借錢成本＝無風險＋利差</h3><p>11/19 同樣 4.86% 的 5 年期美債，投資級借錢成本 5.80%，CCC 級 18.47%。美債降 12bp 時，高收益利差擴 29bp、CCC 擴 45bp，降息的好處被利差吃掉。</p></div>
+      <div><h3><i>6</i>債市先於股市</h3><p>CoreWeave 的 CDS 比美債衝高早約 4 週。大陽線是不是底，只問下跌的原因撤掉沒有；原因是債，就看債。</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh"><span>02</span><h2>三層判讀順序</h2></div>
+    <div class="chain">
+      <div><h3><i>1</i>管道層</h3><p><b>問：</b>錢夠不夠？</p><p><b>看：</b>SOFR − IORB、常備回購用量、準備金、TGA、逆回購。沿用錢荒分頁，不重複計算。</p></div>
+      <div><h3><i>2</i>價格層</h3><p><b>問：</b>是不是加息預期？</p><p><b>看：</b>2 年與 10 年期 21 日變化、10 年隱含通脹。2 年期上升 ≥ 25bp 且多於 10 年期，判為短端加息重估。</p></div>
+      <div><h3><i>3</i>信用層</h3><p><b>問：</b>貴在誰身上？</p><p><b>看：</b>借錢成本指數。高收益債落後公債、也落後投資級，代表壓力在最需要借錢的低評等。</p></div>
+    </div>
+  </section>
+
+  <section id="idx">
+    <div class="sh"><span>03</span><h2>借錢成本指數</h2></div>
+    <div class="chain">
+      <div><h3><i>A</i>高收益對公債</h3><p>HYG ÷ IEF 還原收盤的 21 日變化取負號，再算 5 年百分位。高收益債總報酬落後同期公債越多，信用利差擴得越多。</p></div>
+      <div><h3><i>C</i>高收益對投資級</h3><p>HYG ÷ LQD 的 21 日變化取負號，再算 5 年百分位。壓力集中在低評等時，這項會比 A 更突出。</p></div>
+      <div><h3><i>B</i>短端加息重估＊</h3><p>2 年期殖利率 21 日變化的 5 年百分位。事先列為第三項，回測為反向，移出指數，只留在價格層。</p></div>
+    </div>
+    <p>指數 ＝ A、C 等權平均，0 至 100。區間：低 &lt; 40、中 40–60、偏高 60–75、高 ≥ 75。用 ETF 比值而非 ICE 利差，是因為 FRED 只提供 ICE 近 3 年資料，不夠算 5 年百分位與回測；ETF 自 2007 年起有每日資料。</p>
+    <p><b>區分力（AUC，0.5 為隨機，1 為完美）：</b>預測之後 21 日 SPX 回撤超過 5% 與 10%。</p>
+    <div class="tbl"><table>
+      <thead><tr><th>期間</th><th class="n">天數</th><th class="n">指數</th><th class="n">事先三成分</th><th class="n">A 對公債</th><th class="n">C 對投資級</th><th class="n">B 短端＊</th></tr></thead>
+      <tbody id="auc"></tbody>
+    </table></div>
+    <p class="note">每格為「回撤超過 5%／超過 10%」。參數（21 日、5 年窗、區間門檻）在回測前寫定。＊ B 在看過結果後移出：大跌多半伴隨降息預期，2 年期反而下行。指數對 10% 回撤有區分力，對 5% 回撤接近隨機；「偏高」區的 10% 回撤比例與全期平均相近，訊號集中在「高」區。</p>
+  </section>
+
+  <section>
+    <div class="sh"><span>04</span><h2>節目判讀的回測</h2></div>
+    <ul id="obs"></ul>
+  </section>
+
+  <section>
+    <div class="sh"><span>05</span><h2>節目數字查核</h2></div>
+    <div class="tbl"><table>
+      <thead><tr><th>節目說法</th><th>查核結果</th><th>判定</th></tr></thead>
+      <tbody>
+        <tr><td>11/30 月末結算 2,180 億美元</td><td>TreasuryDirect：2 年 690、9 年 8 個月抗通膨債 190、20 年 160、5 年 700、7 年 440，合計 2,180 億</td><td class="tagv ok">相符</td></tr>
+        <tr><td>11/27 浮動利率債 280 億</td><td>TreasuryDirect 1 年 11 個月浮動利率債 280 億，11/27 結算</td><td class="tagv ok">相符</td></tr>
+        <tr><td>11/10–13 10 年期 4.88% → 5.15%、2 年期 4.56% → 4.88%</td><td>財政部：11/9 收 4.88%／4.56%，11/13 收 5.15%／4.88%</td><td class="tagv ok">相符（起點為 11/9 收盤）</td></tr>
+        <tr><td>11/19 5 年期美債 4.86%</td><td>財政部 11/19 收 4.86%</td><td class="tagv ok">相符</td></tr>
+        <tr><td>11/20 VIX 收 35.89、S&amp;P 500 單週 −8.61%、輝達單日 −14%</td><td>VIX 35.89；SPX 7,561.67 → 6,910.39（−8.61%）；NVDA 145.98 → 125.53（−14.0%）</td><td class="tagv ok">相符</td></tr>
+        <tr><td>市場流傳年底再發 3,100 億淨債</td><td>節目自行否定，以財政部季度融資計畫計算剩 1,514 億</td><td class="tagv warn">節目已更正</td></tr>
+        <tr><td>CoreWeave 五年 CDS 1,194.5bp</td><td>字幕自標口誤，沒有更正值；另一支節目寫 10/15 約 1,194bp（盤中）</td><td class="tagv warn">無法核實</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <div class="sh"><span>06</span><h2>未納入與原因</h2></div>
+    <ul>
+      <li><b>單一公司 CDS 與債券殖利率：</b>節目的企穩線是 CoreWeave 五年 CDS 回到 900–1,000bp 以下、2031 年債殖利率 12% 以下。兩者都沒有免費可靠來源，列在頁面觀察欄，需自行查。</li>
+      <li><b>ICE 信用利差：</b>CCC 回到 12.15% 以下的企穩線保留為觀察卡。FRED 只給近 3 年且需 API 金鑰，因此不進指數。</li>
+      <li><b>股漲債不跟：</b>節目說股漲而利差擴大只是一根陽線。以 QQQ 單日 ≥ +2% 回測不成立，只留作觀察。</li>
+      <li><b>估值情景與通脹錯配：</b>輝達本益比三情景、能源 CPI 基期效應屬單一公司或月度推演，不適合每日指標。</li>
+    </ul>
+  </section>
+
+  <section>
+    <div class="sh"><span>07</span><h2>資料來源</h2></div>
+    <ul>
+      <li><b>Yahoo Finance：</b>HYG、LQD、IEF、QQQ、S&amp;P 500 還原收盤，信用債 ETF 須用含配息的總報酬。</li>
+      <li><b>美國財政部：</b><a href="https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_yield_curve" target="_blank" rel="noopener">每日名目與實際殖利率</a>，2006 年起。</li>
+      <li><b>TreasuryDirect：</b><a href="https://www.treasurydirect.gov/auctions/upcoming/" target="_blank" rel="noopener">標售公告與結果</a>，依結算日加總。</li>
+      <li><b>FRED（選填）：</b>ICE BofA 高收益、CCC 及以下、投資級 OAS，需 API 金鑰。</li>
+    </ul>
+    <p>本頁僅供資訊參考，不構成投資建議。</p>
+  </section>
+</div>
+<script src="data/data.js"></script>
+<script src="mech.js"></script>
+</body>
+</html>

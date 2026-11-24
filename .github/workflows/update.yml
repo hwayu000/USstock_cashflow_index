@@ -20,10 +20,14 @@ jobs:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
       - name: 更新共識崩塌雷達
         run: python consensus/scripts/update.py || echo "::warning::共識崩塌雷達更新失敗，沿用上次資料"
+      - name: 更新借錢成本雷達
+        run: python borrow/scripts/update.py || echo "::warning::借錢成本雷達更新失敗，沿用上次資料"
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
       - name: 提交新資料
         run: |
           git config user.name "dashboard-bot"
           git config user.email "dashboard-bot@users.noreply.github.com"
-          git add data/ consensus/data/
+          git add data/ consensus/data/ borrow/data/
           git diff --cached --quiet || git commit -m "data: $(date -u +'%Y-%m-%d %H:%M') UTC"
           git push
